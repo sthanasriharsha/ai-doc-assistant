@@ -1,5 +1,0 @@
-%%writefile requirements.txt
-streamlit
-openai
-PyPDF2
-python-docx
