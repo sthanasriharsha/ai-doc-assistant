@@ -1,7 +1,11 @@
+import os
 import openai
 import streamlit as st
 from PyPDF2 import PdfReader
 from docx import Document
+
+# Get OpenAI API key from Streamlit Secrets
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Function to extract text from PDF
 def extract_text_pdf(file):
