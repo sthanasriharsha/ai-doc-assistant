@@ -21,14 +21,14 @@ def extract_text_docx(file):
     text = " ".join([p.text for p in doc.paragraphs])
     return text
 
-# Function to call OpenAI LLM
+# Updated function to call OpenAI GPT-4
 def ask_llm(prompt):
-    response = openai.ChatCompletion.create(
+    response = openai.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2
     )
-    return response['choices'][0]['message']['content']
+    return response.choices[0].message.content
 
 # Streamlit UI
 st.title("AI Document Assistant")
@@ -46,9 +46,15 @@ if uploaded_file:
 
     question = st.text_input("Ask a question about this document:")
     if st.button("Get Answer") and question:
-        answer = ask_llm(f"Answer this question based on the document: {doc_text}\nQuestion: {question}")
-        st.write(answer)
+        try:
+            answer = ask_llm(f"Answer this question based on the document: {doc_text}\nQuestion: {question}")
+            st.write(answer)
+        except Exception as e:
+            st.error(f"Error: {e}")
 
     if st.button("Summarize Document"):
-        summary = ask_llm(f"Summarize the following document in 5 lines: {doc_text}")
-        st.write(summary)
+        try:
+            summary = ask_llm(f"Summarize the following document in 5 lines: {doc_text}")
+            st.write(summary)
+        except Exception as e:
+            st.error(f"Error: {e}")
