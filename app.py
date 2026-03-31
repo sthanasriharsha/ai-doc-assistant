@@ -113,7 +113,7 @@ def smart_truncate(text: str, max_chars: int = 12000) -> str:
 def ask_gemini(client, system_prompt: str, messages: list) -> str:
     # Initialize the model with the system prompt
     model = client.GenerativeModel(
-        model_name="gemini-1.5-flash", # Equivalent to gpt-4o-mini
+        model_name="gemini-1.5-flash-latest",
         system_instruction=system_prompt
     )
     
