@@ -111,23 +111,21 @@ def smart_truncate(text: str, max_chars: int = 12000) -> str:
 
 # ─── google API Call ─────────────────────────────────────────────────────────
 def ask_gemini(client, system_prompt: str, messages: list) -> str:
-    # Initialize the model with the system prompt
+    # Initialize with a current, supported model
     model = client.GenerativeModel(
-        model_name="gemini-1.5-flash-latest",
+        model_name="gemini-2.5-flash", 
         system_instruction=system_prompt
     )
     
-    # Convert gemini AI message format to Gemini format (role: "user"/"model")
     history = []
     for m in messages[:-1]:
         role = "user" if m["role"] == "user" else "model"
         history.append({"role": role, "parts": [m["content"]]})
-    
-    # Start chat and send the latest message
+        
     chat = model.start_chat(history=history)
     response = chat.send_message(messages[-1]["content"])
-    
     return response.text
+
 
 
 # ─── Session State Init ──────────────────────────────────────────────────────
