@@ -1,5 +1,5 @@
 import os
-import openai
+import google.generativeai as genai
 import streamlit as st
 from PyPDF2 import PdfReader
 from docx import Document
@@ -80,15 +80,19 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# ─── open ai Client ───────────────────────────────────────────────────────────
+# ─── google ai Client ───────────────────────────────────────────────────────────
 @st.cache_resource
 def get_client():
-    api_key = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY", "")
+    # Change "gemini AI_API_KEY" to "GOOGLE_API_KEY"
+    api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY", "")
     if not api_key:
-        st.error("⚠️ OPENAI_API_KEY not set.")
+        st.error("⚠️ GOOGLE_API_KEY not set.")
         st.stop()
-    openai.api_key = api_key
-    return openai
+    
+    # Configure the Google library
+    genai.configure(api_key=api_key)
+    return genai
+
 
 # ─── Text Extraction ─────────────────────────────────────────────────────────
 def extract_text_pdf(file) -> str:
@@ -105,18 +109,26 @@ def smart_truncate(text: str, max_chars: int = 12000) -> str:
     half = max_chars // 2
     return text[:half] + "\n\n[... middle section truncated ...]\n\n" + text[-half:]
 
-# ─── Openai API Call ─────────────────────────────────────────────────────────
-def ask_openai(client, system_prompt: str, messages: list) -> str:
-    full_messages = [{"role": "system", "content": system_prompt}] + messages
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",  # you can change to gpt-4o if needed
-        messages=full_messages,
-        temperature=0.3,
-        max_tokens=1024
+# ─── google API Call ─────────────────────────────────────────────────────────
+def ask_gemini(client, system_prompt: str, messages: list) -> str:
+    # Initialize the model with the system prompt
+    model = client.GenerativeModel(
+        model_name="gemini-1.5-flash", # Equivalent to gpt-4o-mini
+        system_instruction=system_prompt
     )
+    
+    # Convert gemini AI message format to Gemini format (role: "user"/"model")
+    history = []
+    for m in messages[:-1]:
+        role = "user" if m["role"] == "user" else "model"
+        history.append({"role": role, "parts": [m["content"]]})
+    
+    # Start chat and send the latest message
+    chat = model.start_chat(history=history)
+    response = chat.send_message(messages[-1]["content"])
+    
+    return response.text
 
-    return response.choices[0].message.content
 
 # ─── Session State Init ──────────────────────────────────────────────────────
 if "chat_history" not in st.session_state:
@@ -184,19 +196,19 @@ with st.sidebar:
 
         if st.button("📝 Summarize in 5 bullets"):
             with st.spinner("Summarizing..."):
-                result = ask_openai(client, sys_doc, [{"role": "user", "content": "Summarize this document in exactly 5 concise bullet points."}])
+                result = ask_gemini(client, sys_doc, [{"role": "user", "content": "Summarize this document in exactly 5 concise bullet points."}])
                 st.session_state.chat_history.append({"role": "assistant", "content": f"**📝 Summary:**\n\n{result}"})
             st.rerun()
 
         if st.button("🔑 Extract Key Points"):
             with st.spinner("Extracting..."):
-                result = ask_openai(client, sys_doc, [{"role": "user", "content": "List the 5 most important key points as numbered bullets."}])
+                result = ask_gemini(client, sys_doc, [{"role": "user", "content": "List the 5 most important key points as numbered bullets."}])
                 st.session_state.chat_history.append({"role": "assistant", "content": f"**🔑 Key Points:**\n\n{result}"})
             st.rerun()
 
         if st.button("❓ Generate Quiz Questions"):
             with st.spinner("Generating..."):
-                result = ask_openai(client, sys_doc, [{"role": "user", "content": "Generate 3 quiz questions with answers based on this document."}])
+                result = ask_gemini(client, sys_doc, [{"role": "user", "content": "Generate 3 quiz questions with answers based on this document."}])
                 st.session_state.chat_history.append({"role": "assistant", "content": f"**❓ Quiz:**\n\n{result}"})
             st.rerun()
 
@@ -258,7 +270,7 @@ if user_input:
 
     with st.spinner("Thinking..."):
         try:
-            reply = ask_openai(client, system, recent)
+            reply = ask_gemini(client, system, recent)
             st.session_state.chat_history.append({"role": "assistant", "content": reply})
         except Exception as e:
             st.session_state.chat_history.append({"role": "assistant", "content": f"⚠️ Error: {e}"})
