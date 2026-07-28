@@ -77,6 +77,10 @@ st.markdown("""
         padding: 2.5rem; text-align: center; color: #475569; margin: 1rem 0;
     }
     .welcome-box h3 { color: #64748b; font-size: 1.1rem; margin-bottom: 0.5rem; }
+
+    .stChatInput input {
+    color: #60a5fa !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
