@@ -78,8 +78,10 @@ st.markdown("""
     }
     .welcome-box h3 { color: #64748b; font-size: 1.1rem; margin-bottom: 0.5rem; }
 
-    .stChatInput input {
+    div[data-testid="stChatInput"] textarea {
     color: #60a5fa !important;
+    -webkit-text-fill-color: #60a5fa !important;
+    caret-color: #60a5fa !important;
     }
 </style>
 """, unsafe_allow_html=True)
